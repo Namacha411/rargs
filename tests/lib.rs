@@ -1,6 +1,6 @@
 extern crate assert_cli;
 
-static RARGS: &'static str = "./target/release/rargs";
+static RARGS: &str = "./target/release/rargs";
 
 #[test]
 fn regex_should_match() {

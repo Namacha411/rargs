@@ -1,5 +1,3 @@
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::borrow::Cow;
 use std::cmp::max;
 use std::collections::HashMap;
@@ -7,6 +5,9 @@ use std::convert::From;
 use std::io::{self, BufRead};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
+
+use lazy_static::lazy_static;
+use regex::Regex;
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
 use threadpool::ThreadPool;
@@ -209,10 +210,19 @@ impl Rargs {
     fn execute_for_input(&self, line: &str, line_num: i32) {
         let args = self.get_args(line, line_num);
 
-        let status = Command::new(&self.command)
-            .args(args)
-            .stdin(Stdio::null())
-            .status();
+        let status = if cfg!(target_os = "windows") {
+            Command::new("cmd")
+                .arg("/C")
+                .arg(&self.command)
+                .args(args)
+                .stdin(Stdio::null())
+                .status()
+        } else {
+            Command::new(&self.command)
+                .args(args)
+                .stdin(Stdio::null())
+                .status()
+        };
 
         if let Err(error) = status {
             eprintln!("rargs: {}: {}", self.command, error);
@@ -254,17 +264,15 @@ impl<'a> RegexContext<'a> {
 
         let group_names = pattern
             .capture_names()
-            .filter_map(|x| x)
+            .flatten()
             .collect::<Vec<&str>>();
 
         let mut groups = vec![];
 
         for caps in pattern.captures_iter(content) {
             // the numbered group
-            for mat_wrapper in caps.iter().skip(1) {
-                if let Some(mat) = mat_wrapper {
-                    groups.push(Cow::Borrowed(mat.as_str()));
-                }
+            for mat in caps.iter().skip(1).flatten() {
+                groups.push(Cow::Borrowed(mat.as_str()));
             }
 
             // the named group
@@ -305,7 +313,7 @@ impl<'a> RegexContext<'a> {
 
 impl<'a> Context<'a> for RegexContext<'a> {
     fn get_by_name(&'a self, group_name: &str) -> Option<Cow<'a, str>> {
-        self.map.get(group_name).map(|c| c.clone())
+        self.map.get(group_name).cloned()
     }
 
     fn get_by_range(&'a self, range: &Range, sep: Option<&str>) -> Option<Cow<'a, str>> {
@@ -314,13 +322,13 @@ impl<'a> Context<'a> for RegexContext<'a> {
                 let num = self.translate_neg_index(num);
 
                 if num == 0 {
-                    return self.map.get("").map(|c| c.clone());
+                    return self.map.get("").cloned();
                 } else if num > self.groups.len() {
                     return None;
                 }
 
-                let x = Some(self.groups[num - 1].clone());
-                return x;
+
+                Some(self.groups[num - 1].clone())
             }
 
             Both(left, right) => {
@@ -421,18 +429,15 @@ impl ArgFragment {
             let opt_right = caps.name("right").map(|s| s.as_str().parse().unwrap_or(-1));
             let opt_sep = caps.name("sep").map(|s| s.as_str().to_string());
 
-            if opt_left.is_none() && opt_right.is_none() {
-                return RangeGroup(Inf(), opt_sep);
-            } else if opt_left.is_none() {
-                return RangeGroup(LeftInf(opt_right.unwrap()), opt_sep);
-            } else if opt_right.is_none() {
-                return RangeGroup(RightInf(opt_left.unwrap()), opt_sep);
-            } else {
-                return RangeGroup(Both(opt_left.unwrap(), opt_right.unwrap()), opt_sep);
+            return match (opt_left.is_none(), opt_right.is_none()) {
+                (true, true) => RangeGroup(Inf(), opt_sep),
+                (true, false) => RangeGroup(LeftInf(opt_right.unwrap()), opt_sep),
+                (false, true) => RangeGroup(RightInf(opt_left.unwrap()), opt_sep),
+                (false, false) => RangeGroup(Both(opt_left.unwrap(), opt_right.unwrap()), opt_sep),
             }
         }
 
-        return Literal(field_string.to_string());
+        Literal(field_string.to_string())
     }
 }
 
