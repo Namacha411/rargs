@@ -1,3 +1,8 @@
+# arags
+
+Fork from [lotabout/rargs](https://github.com/lotabout/rargs)
+This is rargs support windows fork.
+
 **Rargs** is kind of `xargs` + `awk` with pattern-matching support.
 
 [![Crates.io](https://img.shields.io/crates/v/rargs.svg)](https://crates.io/crates/rargs) [![Build Status](https://travis-ci.org/lotabout/rargs.svg?branch=master)](https://travis-ci.org/lotabout/rargs)
@@ -6,15 +11,16 @@
 
 ### Mac OS
 
-```
+```sh
 brew install rargs
 ```
 
 ### Nix
 
-```
+```sh
 nix-env -i rargs
 ```
+
 (Currently available in unstable channel)
 
 ### Binary
@@ -24,8 +30,8 @@ put it in your `PATH` after uncompress.
 
 ### Using Cargo
 
-```
-cargo install --git https://github.com/lotabout/rargs.git
+```sh
+cargo install --git https://github.com/Namacha411/rargs.git
 ```
 
 ## Example usage
@@ -46,7 +52,7 @@ Here `{0}` refers to the whole input line, while `{1}` refers to the first group
 
 I had a bunch of URLs and their corresponding target filenames stored in a CSV file:
 
-```
+```csv
 URL1,filename1
 URL2,filename2
 ```
@@ -63,7 +69,7 @@ Here `(?P<group_name>...)` assigns the name `group_name` to the captured group. 
 
 Suppose you have an xSV file with lots of columns, and you only want to extract and format some of them, e.g.:
 
-```
+```xSV
 nobody:*:-2:-2:Unprivileged User:/var/empty:/usr/bin/false
 root:*:0:0:System Administrator:/var/root:/bin/sh
 daemon:*:1:1:System Services:/var/root:/usr/bin/false
@@ -71,7 +77,7 @@ daemon:*:1:1:System Services:/var/root:/usr/bin/false
 
 Here's an example of how `rargs` can be used to process it:
 
-```
+```sh
 $ cat /etc/passwd | rargs -d: echo -e 'id: "{1}"\t name: "{5}"\t rest: "{6..::}"'
 id: "nobody"     name: "Unprivileged User"       rest: "/var/empty:/usr/bin/false"
 id: "root"       name: "System Administrator"    rest: "/var/root:/bin/sh"
@@ -91,6 +97,7 @@ id: "daemon"     name: "System Services"         rest: "/var/root:/usr/bin/false
 ### Regexp captures
 
 `rargs` allows you to use any regular expression to match the input, and captures anything you are interested in. The syntax is the standard, mostly Perl-compatible [Rust regex syntax](https://docs.rs/regex/0.2.10/regex/#syntax) used by tools such as [ripgrep](https://github.com/BurntSushi/ripgrep).
+
 - positional (numbered) groups are captured with parentheses, e.g. `'(\w+):(\d+)'`, and the corresponding groups are referred to by `{1}`, `{2}` etc. in the command
 - named groups are captured with `(?P<name>...)` and referred to by `{name}` in the command
 
