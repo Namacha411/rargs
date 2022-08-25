@@ -1,34 +1,14 @@
 # arags
 
-Fork from [lotabout/rargs](https://github.com/lotabout/rargs)
-This is rargs support windows fork.
+Fork from [lotabout/rargs](https://github.com/lotabout/rargs).
+
+This is rargs support Windows.
 
 **Rargs** is kind of `xargs` + `awk` with pattern-matching support.
 
-[![Crates.io](https://img.shields.io/crates/v/rargs.svg)](https://crates.io/crates/rargs) [![Build Status](https://travis-ci.org/lotabout/rargs.svg?branch=master)](https://travis-ci.org/lotabout/rargs)
+[![Build Status](https://travis-ci.org/lotabout/rargs.svg?branch=master)](https://travis-ci.org/lotabout/rargs)
 
 ## Installation
-
-### Mac OS
-
-```sh
-brew install rargs
-```
-
-### Nix
-
-```sh
-nix-env -i rargs
-```
-
-(Currently available in unstable channel)
-
-### Binary
-
-Download in the [Release Page](https://github.com/lotabout/rargs/releases) and
-put it in your `PATH` after uncompress.
-
-### Using Cargo
 
 ```sh
 cargo install --git https://github.com/Namacha411/rargs.git
